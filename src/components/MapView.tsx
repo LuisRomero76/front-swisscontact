@@ -188,6 +188,15 @@ export default function MapView() {
             position={[user.lat, user.lng]}
             {...{ icon: userIcon } as any}
           >
+            {/* Nombre siempre visible como tooltip centrado */}
+            <Tooltip 
+              {...{ permanent: true, direction: 'center', offset: [0, 0] } as any}
+              className="user-name-tooltip"
+            >
+              {user.name}
+            </Tooltip>
+            
+            {/* Información detallada en popup (al hacer clic) */}
             <Popup>
               <div style={{ textAlign: 'center' }}>
                 <strong>{user.name}</strong>
@@ -235,6 +244,31 @@ export default function MapView() {
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
+        }
+        
+        .user-name-tooltip {
+          background-color: #f2f2f2ff !important;
+          border: none !important;
+          border-radius: 4px !important;
+          padding: 4px 8px !important;
+          font-weight: bold !important;
+          font-size: 12px !important;
+          color: black !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+          white-space: nowrap !important;
+          margin-top: -55px !important;
+          margin-right: -40px ;
+        }
+        
+        .user-name-tooltip::before {
+          display: none !important;
+        }
+        
+        .leaflet-tooltip-left.user-name-tooltip::before,
+        .leaflet-tooltip-right.user-name-tooltip::before,
+        .leaflet-tooltip-top.user-name-tooltip::before,
+        .leaflet-tooltip-bottom.user-name-tooltip::before {
+          display: none !important;
         }
       `}</style>
     </div>

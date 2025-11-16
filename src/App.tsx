@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Layout from "./components/Layout";
 import MapView from "./components/MapView";
 import AssignRoutes from "./components/AssignRoutes";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Navigate to="/monitorear" replace />} />
           <Route path="/monitorear" element={<MapView />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/asignar-rutas" element={<AssignRoutes />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

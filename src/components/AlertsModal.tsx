@@ -13,8 +13,10 @@ import {
   Chip,
   CircularProgress,
   Alert as MuiAlert,
+  IconButton,
 } from '@mui/material';
-import { fetchAlerts, formatAlertDate, type Alert } from '@/services/alertsService';
+import CloseIcon from '@mui/icons-material/Close';
+import { fetchAlerts, deleteAlert, formatAlertDate, type Alert } from '@/services/alertsService';
 
 interface AlertsModalProps {
   open: boolean;
@@ -24,6 +26,7 @@ interface AlertsModalProps {
 export default function AlertsModal({ open, onClose }: AlertsModalProps) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -40,6 +43,21 @@ export default function AlertsModal({ open, onClose }: AlertsModalProps) {
       console.error('Error loading alerts:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAlert = async (alertId: string) => {
+    setDeletingId(alertId);
+    try {
+      const success = await deleteAlert(alertId);
+      if (success) {
+        // Eliminar la alerta de la lista local
+        setAlerts(alerts.filter(alert => alert._id !== alertId));
+      }
+    } catch (error) {
+      console.error('Error deleting alert:', error);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -67,8 +85,25 @@ export default function AlertsModal({ open, onClose }: AlertsModalProps) {
                   borderLeft: '4px solid #ff9800',
                   borderRadius: 1,
                   display: 'block',
+                  position: 'relative',
                 }}
               >
+                {/* Botón de eliminar en la esquina superior derecha */}
+                <IconButton
+                  size="small"
+                  onClick={() => handleDeleteAlert(alert._id)}
+                  disabled={deletingId === alert._id}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    color: '#d32f2f',
+                    '&:hover': { backgroundColor: 'rgba(211, 47, 47, 0.1)' },
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+
                 {/* Indicador de secuencia */}
                 <Chip
                   label={`Alerta #${alerts.length - index}`}

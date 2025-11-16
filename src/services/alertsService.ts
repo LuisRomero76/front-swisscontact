@@ -21,6 +21,25 @@ export async function fetchAlerts(): Promise<Alert[]> {
   }
 }
 
+// Función para eliminar una alerta
+export async function deleteAlert(alertId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${ALERTS_API}/${alertId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!res.ok) {
+      throw new Error(`Error deleting alert: ${res.status} ${res.statusText}`);
+    }
+    return true;
+  } catch (error) {
+    console.error('Error deleting alert:', error);
+    return false;
+  }
+}
+
 // Función auxiliar para formatear la fecha
 export function formatAlertDate(dateString: string): string {
   try {

@@ -23,12 +23,14 @@ import Badge from '@mui/material/Badge';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import AlertsModal from './AlertsModal';
 import { fetchAlerts } from '@/services/alertsService';
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 
 const drawerWidthExpanded = 250;
 const drawerWidthCollapsed = 60;
 
 const menuItems = [
   { text: 'Monitorear', icon: <MonitorIcon />, path: '/monitorear' },
+  { text: 'Dashboard', icon: <SpaceDashboardIcon />, path: '/dashboard' },
   { text: 'Asignar Rutas', icon: <TableChartIcon />, path: '/asignar-rutas' },
   { text: 'Reporte AI', icon: <AutoAwesomeIcon />, path: '/reporte-ai' },
   { text: 'Completados', icon: <TaskAltIcon />, path: '/complete' },
