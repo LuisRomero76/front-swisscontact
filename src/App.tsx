@@ -6,6 +6,7 @@ import Layout from "./components/Layout";
 import MapView from "./components/MapView";
 import AssignRoutes from "./components/AssignRoutes";
 import Dashboard from "./pages/Dashboard";
+import Completados from "./pages/Completados";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/monitorear" element={<MapView />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/asignar-rutas" element={<AssignRoutes />} />
+          <Route path="/complete" element={<Completados />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>

@@ -23,6 +23,7 @@ import Badge from '@mui/material/Badge';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import AlertsModal from './AlertsModal';
 import { fetchAlerts } from '@/services/alertsService';
+import { alertsWebSocketService, type AlertNotification } from '@/services/alertsWebSocketService';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 
 const drawerWidthExpanded = 250;
@@ -44,21 +45,51 @@ export default function Layout({ children }: LayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [alertsModalOpen, setAlertsModalOpen] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
+  const [realtimeAlerts, setRealtimeAlerts] = useState<any[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
 
   // Cargar cantidad de alertas al montar el componente
   useEffect(() => {
+    // Cargar alertas iniciales
     loadAlertCount();
-    // Actualizar cada 30 segundos
-    const interval = setInterval(loadAlertCount, 30000);
-    return () => clearInterval(interval);
+
+    // Conectar al WebSocket para alertas en tiempo real
+    const connectToWebSocket = async () => {
+      try {
+        const handleAlertMessage = (notification: AlertNotification) => {
+          console.log('Nueva alerta en Layout:', notification);
+          // Actualizar el contador de alertas
+          if (notification.alert) {
+            setAlertCount((prev) => prev + 1);
+            // Agregar la alerta a la lista en tiempo real
+            setRealtimeAlerts((prev) => [notification.alert!, ...prev]);
+          }
+        };
+
+        alertsWebSocketService.onMessage(handleAlertMessage);
+        await alertsWebSocketService.connect(handleAlertMessage);
+      } catch (err) {
+        console.error('Error conectando al WebSocket de alertas en Layout:', err);
+        // Si falla WebSocket, usar polling como respaldo
+        const interval = setInterval(loadAlertCount, 30000);
+        return () => clearInterval(interval);
+      }
+    };
+
+    connectToWebSocket();
+
+    return () => {
+      // No desconectar aquí porque Layout es un componente raíz
+      // El servicio se mantiene activo
+    };
   }, []);
 
   const loadAlertCount = async () => {
     try {
       const alerts = await fetchAlerts();
       setAlertCount(alerts.length);
+      setRealtimeAlerts(alerts);
     } catch (error) {
       console.error('Error loading alert count:', error);
     }
@@ -242,7 +273,7 @@ export default function Layout({ children }: LayoutProps) {
       </Box>
 
       {/* Modal de alertas */}
-      <AlertsModal open={alertsModalOpen} onClose={handleCloseAlerts} />
+      <AlertsModal open={alertsModalOpen} onClose={handleCloseAlerts} realtimeAlerts={realtimeAlerts} onAlertsUpdate={setRealtimeAlerts} />
     </Box>
   );
 }

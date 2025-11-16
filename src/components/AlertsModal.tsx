@@ -17,19 +17,56 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { fetchAlerts, deleteAlert, formatAlertDate, type Alert } from '@/services/alertsService';
+import { alertsWebSocketService, type AlertNotification } from '@/services/alertsWebSocketService';
 
 interface AlertsModalProps {
   open: boolean;
   onClose: () => void;
+  realtimeAlerts?: Alert[];
+  onAlertsUpdate?: (alerts: Alert[] | ((prev: Alert[]) => Alert[])) => void;
 }
 
-export default function AlertsModal({ open, onClose }: AlertsModalProps) {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+export default function AlertsModal({ open, onClose, realtimeAlerts = [], onAlertsUpdate }: AlertsModalProps) {
+  const [alerts, setAlerts] = useState<Alert[]>(realtimeAlerts);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Actualizar alertas cuando se reciben nuevas del Layout
   useEffect(() => {
-    if (open) {
+    setAlerts(realtimeAlerts);
+  }, [realtimeAlerts]);
+
+  // Escuchar nuevas alertas via WebSocket cuando el modal está abierto
+  useEffect(() => {
+    if (!open) return;
+
+    const handleAlertMessage = (notification: AlertNotification) => {
+      console.log('Nueva alerta en Modal:', notification);
+      if (notification.alert) {
+        // Agregar nueva alerta al inicio
+        setAlerts((prevAlerts) => [notification.alert!, ...prevAlerts]);
+        // Notificar al Layout
+        if (onAlertsUpdate) {
+          setAlerts((prevAlerts) => {
+            const newAlerts = [notification.alert!, ...prevAlerts];
+            onAlertsUpdate(newAlerts);
+            return newAlerts;
+          });
+        }
+      }
+    };
+
+    // Registrar handler para nuevas alertas
+    alertsWebSocketService.onMessage(handleAlertMessage);
+
+    return () => {
+      // Limpiar handler cuando se cierra el modal
+      alertsWebSocketService.removeMessageHandler(handleAlertMessage);
+    };
+  }, [open, onAlertsUpdate]);
+
+  useEffect(() => {
+    if (open && alerts.length === 0) {
       loadAlerts();
     }
   }, [open]);
@@ -39,6 +76,9 @@ export default function AlertsModal({ open, onClose }: AlertsModalProps) {
     try {
       const data = await fetchAlerts();
       setAlerts(data);
+      if (onAlertsUpdate) {
+        onAlertsUpdate(data);
+      }
     } catch (error) {
       console.error('Error loading alerts:', error);
     } finally {
@@ -52,7 +92,12 @@ export default function AlertsModal({ open, onClose }: AlertsModalProps) {
       const success = await deleteAlert(alertId);
       if (success) {
         // Eliminar la alerta de la lista local
-        setAlerts(alerts.filter(alert => alert._id !== alertId));
+        const updatedAlerts = alerts.filter(alert => alert._id !== alertId);
+        setAlerts(updatedAlerts);
+        // Notificar al Layout
+        if (onAlertsUpdate) {
+          onAlertsUpdate(updatedAlerts);
+        }
       }
     } catch (error) {
       console.error('Error deleting alert:', error);

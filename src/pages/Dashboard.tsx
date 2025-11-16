@@ -18,18 +18,97 @@ import {
 } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { fetchAlerts, formatAlertDate, type Alert } from '@/services/alertsService';
+import { alertsWebSocketService, type AlertNotification } from '@/services/alertsWebSocketService';
 
 export default function Dashboard() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [newAlertCount, setNewAlertCount] = useState(0);
 
   useEffect(() => {
+    // Cargar alertas iniciales
     loadDashboardData();
-    // Actualizar cada 30 segundos
-    const interval = setInterval(loadDashboardData, 30000);
-    return () => clearInterval(interval);
+
+    // Solicitar permiso para notificaciones del navegador
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // Conectar al WebSocket
+    const connectToWebSocket = async () => {
+      try {
+        const handleAlertMessage = (notification: AlertNotification) => {
+          console.log('Nueva alerta recibida:', notification);
+          setWsConnected(true);
+          setNewAlertCount((prev) => prev + 1);
+
+          // Procesar la alerta recibida
+          if (notification.alert) {
+            const newAlert: Alert = notification.alert;
+
+            // Agregar la nueva alerta al inicio de la lista
+            setAlerts((prevAlerts) => {
+              const updatedAlerts = [newAlert, ...prevAlerts];
+              // Ordenar alertas por fecha (más antigua primero)
+              return updatedAlerts.sort((a, b) => {
+                return new Date(a.date).getTime() - new Date(b.date).getTime();
+              });
+            });
+
+            // Notificación del navegador si está disponible
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('Nueva Alerta', {
+                body: `${newAlert.name_user}: ${newAlert.message}`,
+                icon: '/ubicacion-removebg-preview.png',
+              });
+            }
+
+            // Reproducir sonido de notificación
+            playNotificationSound();
+          }
+        };
+
+        alertsWebSocketService.onMessage(handleAlertMessage);
+        await alertsWebSocketService.connect(handleAlertMessage);
+        setWsConnected(true);
+        setError(null);
+      } catch (err) {
+        console.error('Error conectando al WebSocket de alertas:', err);
+        setWsConnected(false);
+        setError('Error conectando a alertas en tiempo real');
+      }
+    };
+
+    connectToWebSocket();
+
+    return () => {
+      alertsWebSocketService.disconnect();
+    };
   }, []);
+
+  const playNotificationSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (err) {
+      console.log('No se pudo reproducir sonido de notificación:', err);
+    }
+  };
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -71,14 +150,41 @@ export default function Dashboard() {
         <CardHeader
           avatar={<ErrorOutlineIcon sx={{ color: '#ff9800', fontSize: 32 }} />}
           title={
-            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#333' }}>
-              Alertas del Sistema
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#333' }}>
+                Alertas del Sistema
+              </Typography>
+              <Chip
+                label={wsConnected ? 'En Vivo' : 'Desconectado'}
+                size="small"
+                variant="outlined"
+                sx={{
+                  bgcolor: wsConnected ? '#e8f5e9' : '#ffebee',
+                  color: wsConnected ? '#2e7d32' : '#c62828',
+                  border: `1px solid ${wsConnected ? '#4caf50' : '#f44336'}`,
+                  fontWeight: 'bold',
+                }}
+              />
+            </Box>
           }
           subheader={
-            <Typography variant="body2" sx={{ color: '#666' }}>
-              {alerts.length} alertas registradas
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: '#666' }}>
+                {alerts.length} alertas registradas
+              </Typography>
+              {newAlertCount > 0 && (
+                <Chip
+                  label={`+${newAlertCount} nuevas`}
+                  size="small"
+                  variant="filled"
+                  sx={{
+                    bgcolor: '#ff9800',
+                    color: 'white',
+                    fontWeight: 'bold',
+                  }}
+                />
+              )}
+            </Box>
           }
           sx={{ bgcolor: '#fafafa', pb: 1 }}
         />
