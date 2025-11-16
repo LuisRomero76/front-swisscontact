@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
@@ -17,6 +17,12 @@ import MenuIcon from '@mui/icons-material/Menu';
 import MonitorIcon from '@mui/icons-material/Monitor';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import Badge from '@mui/material/Badge';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import AlertsModal from './AlertsModal';
+import { fetchAlerts } from '@/services/alertsService';
 
 const drawerWidthExpanded = 250;
 const drawerWidthCollapsed = 60;
@@ -24,6 +30,8 @@ const drawerWidthCollapsed = 60;
 const menuItems = [
   { text: 'Monitorear', icon: <MonitorIcon />, path: '/monitorear' },
   { text: 'Asignar Rutas', icon: <TableChartIcon />, path: '/asignar-rutas' },
+  { text: 'Reporte AI', icon: <AutoAwesomeIcon />, path: '/reporte-ai' },
+  { text: 'Completados', icon: <TaskAltIcon />, path: '/complete' },
 ];
 
 interface LayoutProps {
@@ -32,11 +40,38 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [alertsModalOpen, setAlertsModalOpen] = useState(false);
+  const [alertCount, setAlertCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Cargar cantidad de alertas al montar el componente
+  useEffect(() => {
+    loadAlertCount();
+    // Actualizar cada 30 segundos
+    const interval = setInterval(loadAlertCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadAlertCount = async () => {
+    try {
+      const alerts = await fetchAlerts();
+      setAlertCount(alerts.length);
+    } catch (error) {
+      console.error('Error loading alert count:', error);
+    }
+  };
+
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
+  };
+
+  const handleOpenAlerts = () => {
+    setAlertsModalOpen(true);
+  };
+
+  const handleCloseAlerts = () => {
+    setAlertsModalOpen(false);
   };
 
   return (
@@ -63,7 +98,7 @@ export default function Layout({ children }: LayoutProps) {
             sx={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              justifyContent: 'space-evenly',
               width: '100%',
               gap: 2,
               px: 2,
@@ -87,6 +122,18 @@ export default function Layout({ children }: LayoutProps) {
             />
             <Box component="img" src="/gratis-png-indonesia-swisscontact-organizacion-sostenibilidad-asociacion-contacto.png" alt="Hojas" sx={{ height: 28 }} />
             
+            <ListItemIcon>
+              <IconButton
+                color="inherit"
+                onClick={handleOpenAlerts}
+                sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' } }}
+              >
+                <Badge badgeContent={alertCount} color="error">
+                  <NotificationsActiveIcon />
+                </Badge>
+              </IconButton>
+            </ListItemIcon>
+
           </Box>
         </Toolbar>
       </AppBar>
@@ -191,6 +238,9 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </Box>
       </Box>
+
+      {/* Modal de alertas */}
+      <AlertsModal open={alertsModalOpen} onClose={handleCloseAlerts} />
     </Box>
   );
 }

@@ -254,7 +254,7 @@ export default function AssignRoutes() {
       <TableContainer component={Paper} elevation={2} sx={{ mb: 4 }}>
         <Table>
           <TableHead>
-            <TableRow sx={{ bgcolor: 'hsl(var(--primary))', '& th': { color: 'white', fontWeight: 600 } }}>
+            <TableRow sx={{ bgcolor: '#dddfd3', '& th': { color: 'black', fontWeight: 600 } }}>
               <TableCell>Recolector</TableCell>
               <TableCell>Teléfono</TableCell>
               <TableCell>Seleccionar Ruta</TableCell>
@@ -306,7 +306,7 @@ export default function AssignRoutes() {
                     onClick={() => handleAsignar(user._id)}
                     disabled={!selecciones[user._id]}
                     sx={{
-                      bgcolor: 'hsl(var(--secondary))',
+                      bgcolor: '#31d500',
                       '&:hover': {
                         bgcolor: 'hsl(var(--secondary) / 0.9)',
                       },
@@ -330,7 +330,7 @@ export default function AssignRoutes() {
           <TableContainer component={Paper} elevation={2}>
             <Table>
               <TableHead>
-                <TableRow sx={{ bgcolor: 'hsl(var(--primary))', '& th': { color: 'white', fontWeight: 600 } }}>
+                <TableRow sx={{ bgcolor: '#dddfd3', '& th': { color: 'black', fontWeight: 600 } }}>
                   <TableCell>Recolector</TableCell>
                   <TableCell>Teléfono</TableCell>
                   <TableCell>Ruta Asignada</TableCell>

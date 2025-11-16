@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, Tooltip, useMap, Marker, Popup } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
 import L from 'leaflet';
-import { fetchRoutesFromApi, routeColors, convertCoordinates } from '@/data/routesData';
+import { fetchRoutesFromApi, fetchRoutesRaw, routeColors, convertCoordinates, type ApiRoute } from '@/data/routesData';
 import { trackingService, type ActiveUser } from '@/services/trackingService';
 import 'leaflet/dist/leaflet.css';
 
@@ -16,10 +16,10 @@ L.Icon.Default.mergeOptions({
 
 // Icono personalizado para usuarios activos
 const userIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: '/ubicacion-removebg-preview.png',
+  iconRetinaUrl: '/ubicacion-removebg-preview.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
+  iconSize: [41, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
@@ -42,6 +42,8 @@ function FitBounds({ routes }: { routes: [number, number][][] }) {
 
 export default function MapView() {
   const [routes, setRoutes] = useState<[number, number][][]>([]);
+  const [routeNames, setRouteNames] = useState<string[]>([]);
+  const [routeColors, setRouteColors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeUsers, setActiveUsers] = useState<Map<string, ActiveUser>>(new Map());
@@ -51,13 +53,23 @@ export default function MapView() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    fetchRoutesFromApi()
-      .then((geojson) => {
+    
+    Promise.all([fetchRoutesFromApi(), fetchRoutesRaw()])
+      .then(([geojson, rawRoutes]) => {
         if (!mounted) return;
+        
+        // Obtener coordenadas de geojson
         const r = geojson.features.map((feature) =>
           convertCoordinates(feature.geometry.coordinates as number[][])
         );
         setRoutes(r);
+        
+        // Obtener nombres y colores según estado de asignación
+        const names = rawRoutes.map((route: ApiRoute) => route.name);
+        const colors = rawRoutes.map((route: ApiRoute) => route.assigned ? '#001effff' : '#ff0d0dff');
+        
+        setRouteNames(names);
+        setRouteColors(colors);
       })
       .catch((err) => {
         console.error(err);
@@ -150,7 +162,8 @@ export default function MapView() {
 
         {/* Rutas */}
         {routes.map((route, index) => {
-          const color = routeColors[index % routeColors.length];
+          const color = routeColors[index];
+          const routeName = routeNames[index] || `Ruta ${index + 1}`;
           return (
             <Polyline
               key={index}
@@ -162,7 +175,7 @@ export default function MapView() {
               }}
             >
               <Tooltip {...{ permanent: true } as any} direction="center" className="route-tooltip">
-                Ruta {index + 1}
+                {routeName}
               </Tooltip>
             </Polyline>
           );
@@ -202,11 +215,13 @@ export default function MapView() {
       <div className="leyenda">
         <h4>Microrutas</h4>
         {routes.map((_, index) => {
-          const color = routeColors[index % routeColors.length];
+          const color = routeColors[index];
+          const routeName = routeNames[index] || `Ruta ${index + 1}`;
+          const isAssigned = color === '#0014f3ff';
           return (
             <div key={index} className="item-leyenda">
               <div style={{ backgroundColor: color }}></div>
-              <span>Ruta {index + 1}</span>
+              <span>{routeName} {isAssigned ? '' : ''}</span>
             </div>
           );
         })}
