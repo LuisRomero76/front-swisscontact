@@ -35,7 +35,6 @@ const menuItems = [
   { text: 'Dashboard', icon: <AnalyticsIcon />, path: '/dashboard-completadas' },
   { text: 'Asignar Rutas', icon: <TableChartIcon />, path: '/asignar-rutas' },
   { text: 'Completados', icon: <TaskAltIcon />, path: '/complete' },
-  
 ];
 
 interface LayoutProps {
@@ -183,7 +182,7 @@ export default function Layout({ children }: LayoutProps) {
             boxSizing: 'border-box',
             transition: 'width 0.3s ease',
             overflowX: 'hidden',
-            bgcolor: 'hsl(var(--sidebar-background))',
+            bgcolor: 'var(--sidebar-background)',
             borderRight: '1px solid hsl(var(--sidebar-border))',
           },
         }}
@@ -205,7 +204,7 @@ export default function Layout({ children }: LayoutProps) {
                         ? 'hsl(var(--sidebar-accent))'
                         : 'transparent',
                       color: isActive
-                        ? 'hsl(var(--sidebar-accent-foreground))'
+                        ? 'var(--sidebar-accent-foreground)'
                         : 'hsl(var(--sidebar-foreground))',
                       '&:hover': {
                         bgcolor: isActive

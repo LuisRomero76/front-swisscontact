@@ -38,12 +38,12 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    --sidebar-background: 210 30% 98%;
+    --sidebar-background: rgb(233, 233, 233);
     --sidebar-foreground: 210 20% 15%;
     --sidebar-primary: 207 89% 47%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 207 89% 47%;
+    --sidebar-accent-foreground: green;
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 207 89% 47%;
   }
