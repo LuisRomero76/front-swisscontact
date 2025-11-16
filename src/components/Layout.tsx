@@ -25,16 +25,17 @@ import AlertsModal from './AlertsModal';
 import { fetchAlerts } from '@/services/alertsService';
 import { alertsWebSocketService, type AlertNotification } from '@/services/alertsWebSocketService';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 
 const drawerWidthExpanded = 250;
 const drawerWidthCollapsed = 60;
 
 const menuItems = [
   { text: 'Monitorear', icon: <MonitorIcon />, path: '/monitorear' },
-  { text: 'Dashboard', icon: <SpaceDashboardIcon />, path: '/dashboard' },
+  { text: 'Dashboard', icon: <AnalyticsIcon />, path: '/dashboard-completadas' },
   { text: 'Asignar Rutas', icon: <TableChartIcon />, path: '/asignar-rutas' },
-  { text: 'Reporte AI', icon: <AutoAwesomeIcon />, path: '/reporte-ai' },
   { text: 'Completados', icon: <TaskAltIcon />, path: '/complete' },
+  
 ];
 
 interface LayoutProps {
