@@ -1,4 +1,4 @@
-import { useState, ReactNode, useEffect } from 'react';
+import { useState, ReactNode, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
@@ -49,6 +49,44 @@ export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const triggerBrowserNotification = useCallback((alert?: AlertNotification['alert']) => {
+    if (!alert || typeof window === 'undefined' || !('Notification' in window)) {
+      return;
+    }
+
+    const showNotification = () => {
+      if (Notification.permission === 'granted') {
+        new Notification('Nueva alerta detectada', {
+          body: `${alert.name_user}: ${alert.message}`,
+          icon: '/logo-0.png',
+        });
+      }
+    };
+
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          showNotification();
+        }
+      });
+      return;
+    }
+
+    showNotification();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      return;
+    }
+
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {
+        console.warn('No se pudo obtener permiso de notificaciones del navegador');
+      });
+    }
+  }, []);
+
   // Cargar cantidad de alertas al montar el componente
   useEffect(() => {
     // Cargar alertas iniciales
@@ -64,6 +102,7 @@ export default function Layout({ children }: LayoutProps) {
             setAlertCount((prev) => prev + 1);
             // Agregar la alerta a la lista en tiempo real
             setRealtimeAlerts((prev) => [notification.alert!, ...prev]);
+            triggerBrowserNotification(notification.alert);
           }
         };
 
