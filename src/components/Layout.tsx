@@ -74,18 +74,18 @@ export default function Layout({ children }: LayoutProps) {
 
             <Box
               component="img"
-              src="/public/logo_ciudades_circulates.png"
+              src="/logo_ciudades_circulates.png"
               alt="Swisscontact"
               sx={{ width: 130, alignItems: 'end', display: { xs: 'none', sm: 'block' } }}
             />
 
             <Box
               component="img"
-              src="/public/logo-0.png"
+              src="/logo-0.png"
               alt="Swisscontact"
               sx={{ width: 130, alignItems: 'end', display: { xs: 'none', sm: 'block' } }}
             />
-            <Box component="img" src="/public/gratis-png-indonesia-swisscontact-organizacion-sostenibilidad-asociacion-contacto.png" alt="Hojas" sx={{ height: 28 }} />
+            <Box component="img" src="/gratis-png-indonesia-swisscontact-organizacion-sostenibilidad-asociacion-contacto.png" alt="Hojas" sx={{ height: 28 }} />
             
           </Box>
         </Toolbar>
